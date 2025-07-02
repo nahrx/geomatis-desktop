@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geomatis - Modern Tab UI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      padding: 40px 20px;
+      color: #334155;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.06);
+      padding: 32px 40px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .logo {
+      display: block;
+      width: 96px;
+      margin: 0 auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 1px rgba(0,0,0,0.05));
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 700;
+      font-size: 2.25rem;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+    p {
+      text-align: center;
+      font-size: 1rem;
+      color: #64748b;
+      margin-top: 0;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    /* Tab bar container */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      border-bottom: 2px solid #e2e8f0;
+      user-select: none;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #64748b;
+      border-radius: 12px 12px 0 0;
+      background-color: transparent;
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease;
+      border: 2px solid transparent;
+      border-bottom: none;
+    }
+
+    .tab:hover {
+      color: #2563eb;
+      background-color: #e0e7ff;
+    }
+
+    .tab.active {
+      color: #1e40af;
+      background-color: #e0e7ff;
+      border-color: #3b82f6;
+      border-bottom: 2px solid #fff;
+      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      cursor: default;
+    }
+
+    /* Tab content */
+    .input-box {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .input-box.active {
+      display: flex;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+      font-family: inherit;
+      color: #334155;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+    }
+
+    button {
+      background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
+      border: none;
+      padding: 14px 24px;
+      font-weight: 700;
+      border-radius: 14px;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 1rem;
+      margin-top: 12px;
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #1e40af 0%, #2563eb 100%);
+    }
+    button.save-btn {
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    }
+    button.save-btn:hover {
+      background: linear-gradient(90deg, #047857 0%, #065f46 100%);
+    }
+    button.upload-btn {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+    button.upload-btn:hover {
+      background: linear-gradient(90deg,#b45309 0%,#92400e 100%);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 20px 0;
+    }
+
+    .select-files {
+      min-height: 40px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #64748b;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    .log-result {
+      margin-top: 32px;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      background: #e0e7ff;
+      border-radius: 12px;
+      color: #1e40af;
+      min-height: 40px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+
+    /* Table styles for Master Maps tab */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    thead {
+      background: #3b82f6;
+      color: #fff;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    tbody tr:hover {
+      background-color: #eff6ff;
+    }
+    button.delete-btn {
+      background: #ef4444;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    button.delete-btn:hover {
+      background: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+  <main class="container" role="main">
+    <img id="logo" class="logo" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/45a75369-399e-428a-aebb-6847a25a044c.png" alt="Geomatis modern logo" />
+    <h1>Geomatis</h1>
+    <p>Georeferensi otomatis peta WS dan WB dari kegiatan survei/sensus BPS</p>
+
+    <nav class="tabs" role="tablist" aria-label="Main Sections">
+      <div class="tab active" role="tab" tabindex="0" aria-selected="true" aria-controls="database" id="tab-database" data-tab="database">Database Setting</div>
+      <div class="tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="master" id="tab-master" data-tab="master">Master Maps</div>
+      <div class="tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="georeferensi" id="tab-georeferensi" data-tab="georeferensi">Georeferensi</div>
+    </nav>
+
+    <!-- Database Setting Tab -->
+    <section class="input-box active" role="tabpanel" aria-labelledby="tab-database" id="database" tabindex="0">
+      <label for="databaseHost">Host</label>
+      <input id="databaseHost" type="text" />
+      <label for="databaseName">Database Name</label>
+      <input id="databaseName" type="text" />
+      <label for="databaseUsername">User Name</label>
+      <input id="databaseUsername" type="text" />
+      <label for="databasePassword">Password</label>
+      <input id="databasePassword" type="password" />
+      <div style="display:flex; gap: 12px; margin-top:12px;">
+        <button type="button" id="connectDbBtn" onclick="connectDatabase()">
+          <span class="material-icons" aria-hidden="true">link</span>Connect to Database
+        </button>
+        <button type="button" class="save-btn" id="saveDbBtn" onclick="saveDatabaseSettings()">
+          <span class="material-icons" aria-hidden="true">save</span>Save Settings
+        </button>
+      </div>
+    </section>
+
+    <!-- Master Maps Tab -->
+    <section class="input-box" role="tabpanel" aria-labelledby="tab-master" id="master" tabindex="0" hidden>
+      <button class="upload-btn" type="button" id="uploadMasterMapBtn" onclick="uploadMasterMap()">
+        <span class="material-icons" aria-hidden="true">upload_file</span>Upload Master Maps
+      </button>
+      <div class="table-container" role="region" aria-label="Master Maps List">
+        <table id="masterMapsTable">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Dimension</th>
+              <th scope="col">SRID</th>
+              <th scope="col">Type</th>
+              <th scope="col" aria-label="Delete action"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows will be dynamically added -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Georeferensi Tab -->
+    <section class="input-box" role="tabpanel" aria-labelledby="tab-georeferensi" id="georeferensi" tabindex="0" hidden>
+      <label for="masterMapSelect">Pilih Peta Master:</label>
+      <select id="masterMapSelect" class="input" aria-describedby="mapSelectDesc" aria-required="true">
+        <option id="mapSelectDesc">Loading...</option>
+      </select>
+      <hr />
+      <button id="selectFileButton" onclick="selectFiles()">Pilih file raster (jpg/png)</button>
+      <div class="select-files" id="fileList"></div>
+      <button id="submitFilesButton" onclick="processFiles()">Mulai Proses Georeferensi</button>
+    </section>
+
+    <div class="log-result" id="log" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.input-box');
+    const masterMapsTableBody = document.querySelector('#masterMapsTable tbody');
+    const log = document.getElementById('log');
+
+    let masterMaps = [
+      { name: 'Map A', dimension: '1024x768', srid: '4326', type: 'Raster' },
+      { name: 'Map B', dimension: '2048x2048', srid: '3857', type: 'Vector' },
+    ];
+
+    function refreshMasterMapsTable() {
+      masterMapsTableBody.innerHTML = '';
+      if (masterMaps.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 5;
+        td.style.textAlign = 'center';
+        td.style.color = '#94a3b8';
+        td.textContent = 'No master maps available.';
+        tr.appendChild(td);
+        masterMapsTableBody.appendChild(tr);
+        return;
+      }
+      masterMaps.forEach((map, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${map.name}</td>
+          <td>${map.dimension}</td>
+          <td>${map.srid}</td>
+          <td>${map.type}</td>
+          <td><button class="delete-btn" aria-label="Delete ${map.name}" data-index="${i}">Delete</button></td>
+        `;
+        masterMapsTableBody.appendChild(tr);
+      });
+      masterMapsTableBody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.currentTarget.getAttribute('data-index'));
+          if (index >= 0 && index < masterMaps.length) {
+            const deleted = masterMaps.splice(index, 1);
+            log.textContent = `Deleted master map "${deleted[0].name}".`;
+            refreshMasterMapsTable();
+          }
+        });
+      });
+    }
+
+    refreshMasterMapsTable();
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        switchTab(target, tab);
+      });
+
+      tab.addEventListener('keydown', (e) => {
+        let index = Array.from(tabs).indexOf(e.target);
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          let nextIndex = (index + 1) % tabs.length;
+          tabs[nextIndex].focus();
+          tabs[nextIndex].click();
+        }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          let prevIndex = (index - 1 + tabs.length) % tabs.length;
+          tabs[prevIndex].focus();
+          tabs[prevIndex].click();
+        }
+      });
+    });
+
+    function switchTab(tabName, tabElement) {
+      tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+        t.setAttribute('tabindex', '-1');
+      });
+      panels.forEach(panel => {
+        panel.classList.remove('active');
+        panel.setAttribute('hidden', '');
+      });
+
+      tabElement.classList.add('active');
+      tabElement.setAttribute('aria-selected', 'true');
+      tabElement.setAttribute('tabindex', '0');
+
+      const panel = document.getElementById(tabName);
+      panel.classList.add('active');
+      panel.removeAttribute('hidden');
+      panel.focus();
+    }
+
+    function connectDatabase() {
+      const host = document.getElementById('databaseHost').value.trim();
+      const dbName = document.getElementById('databaseName').value.trim();
+      const username = document.getElementById('databaseUsername').value.trim();
+      const password = document.getElementById('databasePassword').value;
+
+      if (!host || !dbName || !username) {
+        alert('Please fill in Host, Database Name and User Name to connect.');
+        return;
+      }
+      log.textContent = 'Connecting to database...';
+
+      setTimeout(() => {
+        log.textContent = `Connected to database "${dbName}" at ${host} as ${username}.`;
+      }, 1500);
+    }
+    function saveDatabaseSettings() {
+      log.textContent = 'Database settings saved.';
+      alert('Database settings have been saved!');
+    }
+
+    function uploadMasterMap() {
+      const newMapName = prompt('Enter new master map name:', 'New Map');
+      if (!newMapName) return;
+      const dimension = prompt('Enter dimension (e.g. 1024x768):', '1024x768') || '1024x768';
+      const srid = prompt('Enter SRID:', '4326') || '4326';
+      const type = prompt('Enter type (Raster/Vector):', 'Raster') || 'Raster';
+
+      masterMaps.push({ name: newMapName, dimension, srid, type });
+      refreshMasterMapsTable();
+      log.textContent = `Uploaded master map "${newMapName}".`;
+    }
+
+    function selectFiles() {
+      alert('Select files logic placeholder');
+    }
+
+    function processFiles() {
+      alert('Process files logic placeholder');
+    }
+  </script>
+</body>
+</html>
+
