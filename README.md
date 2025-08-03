@@ -35,13 +35,13 @@ or
 
 ## Quick Guide
 1. Go to Georeference Page
-	![Georeference page](/example/images/img1.png =200x "This is a georeference page.")
+	<img src="/example/images/img1.png" alt="This is a georeference page." style="width:200px;"/>
 2. Example of georeferencing WS maps, using master map GeoJSON from a local directory. [example here](https://github.com/nahrx/geomatis-desktop/example)
-	![Georeferencing WS maps](/example/images/img2.png =200x "Process of georeferencing WS maps" )
+	<img src="/example/images/img2.png" alt="Process of georeferencing WS maps" style="width:200px;"/>
 3. If successful, a log like the following will appear:
-	![Georeference log](/example/images/img3.png =200x "Georeference log result")
+	<img src="/example/images/img3.png" alt="Georeference log result" style="width:200px;"/>
 4. And a world file (e.g. .jgw) will be created in the same directory where the raster map file is stored.
-	![World file](/example/images/img4.png =200x "world file")
+	<img src="/example/images/img4.png" alt="world files" style="width:200px;"/>
 5. The results can be checked in QGIS – tested and verified on QGIS version 3.34.14.
-	![QGis result](/example/images/img5.png =200x "Result in QGis")
+	<img src="/example/images/img5.png" alt="result in QGis" style="width:200px;"/>
 
