@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"geomatis-desktop/geo"
+	"geomatis-desktop/bpsmap"
 	"geomatis-desktop/types"
 
 	"github.com/joho/godotenv"
@@ -216,7 +216,7 @@ func (s *PostgreStorage) GetMasterMapAttributes(masterMap string) ([]types.Maste
 	return values, nil
 }
 
-func (s *PostgreStorage) GetExtent(tableName, idSls string, mapType geo.BpsMap) (*types.Extent, error) {
+func (s *PostgreStorage) GetExtent(tableName, idSls string, mapType bpsmap.BpsMap) (*types.Extent, error) {
 
 	// Query to get the bounding box coordinates
 	query := fmt.Sprintf("SELECT ST_XMin(ST_Extent(geom)), ST_YMin(ST_Extent(geom)), ST_XMax(ST_Extent(geom)), ST_YMax(ST_Extent(geom)) FROM %s WHERE %s = '%s'", tableName, mapType.GetKeyName(), idSls)

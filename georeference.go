@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"geomatis-desktop/geo"
+	"geomatis-desktop/bpsmap"
 	"geomatis-desktop/util"
 	"os"
 	"path"
@@ -12,7 +12,7 @@ import (
 	"geomatis-desktop/types"
 )
 
-func (a *App) worker(id int, rasterFilePath <-chan string, results chan<- types.Result, g types.GeoreferenceSettings, mapType geo.BpsMap) {
+func (a *App) GeoreferenceWorker(id int, rasterFilePath <-chan string, results chan<- types.Result, g types.GeoreferenceSettings, mapType bpsmap.BpsMap) {
 	fmt.Println("worker : ", id)
 	for rasterPath := range rasterFilePath {
 
@@ -94,8 +94,6 @@ func (a *App) worker(id int, rasterFilePath <-chan string, results chan<- types.
 			}
 		}
 
-		fmt.Println("featurePoints")
-		fmt.Println(featurePoints)
 		//Calculate Georeference Parameter and save world file
 		parameter := util.CalculateGeoreferenceParameters(imgDim, featurePoints, *polygonExtent, g.RasterFeatureSettings.Margin)
 		worldFileExt := GetWorldFileExtlist()[strings.ToLower(path.Ext(rasterPath))]

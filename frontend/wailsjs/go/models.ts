@@ -43,6 +43,95 @@ export namespace types {
 	        this.maxY = source["maxY"];
 	    }
 	}
+	export class RasterFeatureSettings {
+	    XPosition: string;
+	    YPosition: string;
+	    Margin: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RasterFeatureSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.XPosition = source["XPosition"];
+	        this.YPosition = source["YPosition"];
+	        this.Margin = source["Margin"];
+	    }
+	}
+	export class RasterKeySettings {
+	    Type: string;
+	    NumChar: number;
+	    // Go type: regexp
+	    Regex?: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new RasterKeySettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Type = source["Type"];
+	        this.NumChar = source["NumChar"];
+	        this.Regex = this.convertValues(source["Regex"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class GeoreferenceSettings {
+	    MasterMapSource: string;
+	    MasterMap: string;
+	    AttrKey: string;
+	    RasterKeySettings?: RasterKeySettings;
+	    RasterFeatureSettings?: RasterFeatureSettings;
+	
+	    static createFrom(source: any = {}) {
+	        return new GeoreferenceSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.MasterMapSource = source["MasterMapSource"];
+	        this.MasterMap = source["MasterMap"];
+	        this.AttrKey = source["AttrKey"];
+	        this.RasterKeySettings = this.convertValues(source["RasterKeySettings"], RasterKeySettings);
+	        this.RasterFeatureSettings = this.convertValues(source["RasterFeatureSettings"], RasterFeatureSettings);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class MasterMap {
 	    name: string;
 	    dimension: number;
@@ -61,6 +150,7 @@ export namespace types {
 	        this.type = source["type"];
 	    }
 	}
+	
 
 }
 

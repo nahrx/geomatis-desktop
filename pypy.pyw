@@ -4,21 +4,23 @@ import cv2
 def rasterFeaturePoints_tes(tes):
     return tes
 def rasterFeaturePoints(filePath,resize=False,rotation=0,view=False):
-    img = cv2.imread(filePath)
-    scale_percent = 20
+    imgRaw = cv2.imread(filePath)
+    scale_percent = 40
     if resize:
          # percent of original size
-        width = int(img.shape[1] * scale_percent / 100)
-        height = int(img.shape[0] * scale_percent / 100)
+        width = int(imgRaw.shape[1] * scale_percent / 100)
+        height = int(imgRaw.shape[0] * scale_percent / 100)
         dim = (width, height)
-        img = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-
-    if rotation == 90:
-        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        imgRaw = cv2.resize(imgRaw, dim, interpolation = cv2.INTER_AREA)
+    
+    if rotation == 0:
+        img = imgRaw
+    elif rotation == 90:
+        img = cv2.rotate(imgRaw, cv2.ROTATE_90_CLOCKWISE)
     elif rotation == 180:
-        img = cv2.rotate(img, cv2.ROTATE_180)
+        img = cv2.rotate(imgRaw, cv2.ROTATE_180)
     elif rotation == -90:
-        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        img = cv2.rotate(imgRaw, cv2.ROTATE_90_COUNTERCLOCKWISE)
     
     #blur = cv2.pyrMeanShiftFiltering(img, 11, 21)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -48,7 +50,7 @@ def rasterFeaturePoints(filePath,resize=False,rotation=0,view=False):
         points.append(approx[0])
     list = {'points': points}
     jsonString = json.dumps(list)
-    if view and resize:
+    if view:
         cv2.drawContours(img, container_approx, -1, (0, 0, 255), 5)
         cv2.imshow('image', img)
         #cv2.imshow('thresh', thresh)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"geomatis-desktop/geo"
+	"geomatis-desktop/bpsmap"
 	"geomatis-desktop/storage"
 	"geomatis-desktop/types"
 	"geomatis-desktop/util"
@@ -20,7 +20,7 @@ import (
 type App struct {
 	ctx    context.Context
 	store  storage.Storage
-	extent *geo.Extents
+	extent *bpsmap.Extents
 }
 
 // NewApp creates a new App application struct
@@ -204,13 +204,13 @@ func (a *App) SelectGeojsonFileForGeoreference(mapType string) (string, error) {
 		return "", err
 	}
 	if mapType == "ws" {
-		e, err := geo.ReadExtents(file, geo.WsMap{})
+		e, err := bpsmap.ParseExtents(file, bpsmap.WsMap{})
 		if err != nil {
 			return "", err
 		}
 		a.extent = e
 	} else if mapType == "wb" {
-		e, err := geo.ReadExtents(file, geo.WbMap{})
+		e, err := bpsmap.ParseExtents(file, bpsmap.WbMap{})
 		if err != nil {
 			return "", err
 		}
@@ -221,7 +221,7 @@ func (a *App) SelectGeojsonFileForGeoreference(mapType string) (string, error) {
 
 	return file, nil
 }
-func (a *App) SelectFiles() ([]string, error) {
+func (a *App) SelectRasterFiles() ([]string, error) {
 	file, err := runtime.OpenMultipleFilesDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Image File (jpg/jpeg or png only)",
 		Filters: []runtime.FileFilter{
@@ -237,7 +237,7 @@ func (a *App) SelectFiles() ([]string, error) {
 	return file, nil
 }
 
-func (a *App) ProcessFiles(filePaths []string, masterMap string, masterMapType string, masterMapSource string) ([]string, error) {
+func (a *App) ProcessGeoreference(filePaths []string, masterMap string, masterMapType string, masterMapSource string) ([]string, error) {
 	log := []string{}
 	if masterMap == "" {
 		return nil, fmt.Errorf("missing master map")
@@ -283,11 +283,11 @@ func (a *App) ProcessFiles(filePaths []string, masterMap string, masterMapType s
 
 	gSettings.MasterMapSource = masterMapSource
 
-	var mapType geo.BpsMap
+	var mapType bpsmap.BpsMap
 	if masterMapType == "ws" {
-		mapType = geo.WsMap{}
+		mapType = bpsmap.WsMap{}
 	} else if masterMapType == "wb" {
-		mapType = geo.WsMap{}
+		mapType = bpsmap.WsMap{}
 	} else {
 		return nil, fmt.Errorf("Error select mapType")
 	}
@@ -300,7 +300,7 @@ func (a *App) ProcessFiles(filePaths []string, masterMap string, masterMapType s
 	files := make(chan string, numJobs)
 	results := make(chan types.Result, numJobs)
 	for w := 0; w < numWorkers; w++ {
-		go a.worker(w, files, results, gSettings, mapType)
+		go a.GeoreferenceWorker(w, files, results, gSettings, mapType)
 	}
 
 	for j := 0; j < numJobs; j++ {

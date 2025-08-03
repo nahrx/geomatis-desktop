@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"geomatis-desktop/geo"
+	"geomatis-desktop/bpsmap"
 	"geomatis-desktop/types"
 )
 
@@ -12,7 +12,7 @@ type Storage interface {
 	GetMasterMaps() ([]types.MasterMap, error)
 	GetMasterMapByName(string) (types.MasterMap, error)
 	GetMasterMapAttributes(string) ([]types.MasterMapAttr, error)
-	GetExtent(string, string, geo.BpsMap) (*types.Extent, error)
+	GetExtent(string, string, bpsmap.BpsMap) (*types.Extent, error)
 	GetAttributesValue(string, string, string, []string) ([]string, error)
 	CreateMasterMaps(string, *[]byte) error
 	DeleteMasterMap(string) error

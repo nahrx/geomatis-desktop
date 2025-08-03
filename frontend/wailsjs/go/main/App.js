@@ -18,6 +18,10 @@ export function DisconnectDB(arg1) {
   return window['go']['main']['App']['DisconnectDB'](arg1);
 }
 
+export function GeoreferenceWorker(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['main']['App']['GeoreferenceWorker'](arg1, arg2, arg3, arg4, arg5);
+}
+
 export function GetExtent(arg1) {
   return window['go']['main']['App']['GetExtent'](arg1);
 }
@@ -30,16 +34,12 @@ export function LoadDbConfig() {
   return window['go']['main']['App']['LoadDbConfig']();
 }
 
-export function ProcessFiles(arg1, arg2, arg3, arg4) {
-  return window['go']['main']['App']['ProcessFiles'](arg1, arg2, arg3, arg4);
+export function ProcessGeoreference(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['ProcessGeoreference'](arg1, arg2, arg3, arg4);
 }
 
 export function SaveDbConfig(arg1) {
   return window['go']['main']['App']['SaveDbConfig'](arg1);
-}
-
-export function SelectFiles() {
-  return window['go']['main']['App']['SelectFiles']();
 }
 
 export function SelectGeojsonFile() {
@@ -48,4 +48,8 @@ export function SelectGeojsonFile() {
 
 export function SelectGeojsonFileForGeoreference(arg1) {
   return window['go']['main']['App']['SelectGeojsonFileForGeoreference'](arg1);
+}
+
+export function SelectRasterFiles() {
+  return window['go']['main']['App']['SelectRasterFiles']();
 }

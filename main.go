@@ -14,6 +14,7 @@ import (
 var assets embed.FS
 
 func main() {
+
 	app := NewApp()
 
 	// Create application with options
@@ -35,4 +36,5 @@ func main() {
 	if err != nil {
 		println("Error:", err.Error())
 	}
+
 }

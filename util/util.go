@@ -1,7 +1,6 @@
 package util
 
 import (
-	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -13,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -23,8 +21,6 @@ import (
 )
 
 func init() {
-	// damn important or else At(), Bounds() functions will
-	// caused memory pointer error!!
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
 }
@@ -128,16 +124,6 @@ func CalculateGeoreferenceParameters(img types.Dimension, rasterPoints []types.C
 	p.E = -scale * math.Cos(radian)
 	p.C = polygonCentroid[0] - p.A*(x) - p.B*(y)
 	p.F = polygonCentroid[1] - p.D*(x) - p.E*(y)
-
-	// fmt.Println("\nA : ", p.A)
-	// fmt.Println("D : ", p.D)
-	// fmt.Println("B : ", p.B)
-	// fmt.Println("E : ", p.E)
-	// fmt.Println("C : ", p.C)
-	// fmt.Println("F : ", p.F)
-	// fmt.Println("\nAlpha : ", angle)
-	// fmt.Println("sin a : ", math.Sin(radian))
-	// fmt.Println("cos a : ", math.Cos(radian))
 	return &p
 }
 func GetImageDimensions(file io.Reader) (types.Dimension, error) {
@@ -193,33 +179,9 @@ func GetOrientedImageDimensions(file1 io.Reader, file2 io.Reader) (types.Dimensi
 	if oValue == 8 || oValue == 6 { // Swap width and height if rotation 90 or -90 degree
 		imgDim.Length, imgDim.Width = imgDim.Width, imgDim.Length
 	}
-	fmt.Println("orientation after : ", imgDim)
-
-	//return imgDim, fmt.Errorf("error testing ########################")
 	return imgDim, nil
 }
-func GetOrientedImageTesting(file multipart.File) (types.Dimension, error) {
-	// pipeReader, pipeWriter := io.Pipe()
-	// bodyReader := io.TeeReader(file, pipeWriter)
 
-	imgDim, err := GetImageDimensions(file)
-	fmt.Println("function 1")
-	if err != nil {
-		return types.Dimension{}, fmt.Errorf("Error decoding image config: %s", err)
-	}
-
-	oValue, err := GetOrientationTag(file)
-	fmt.Println("function 2")
-	if err != nil {
-		fmt.Println(oValue)
-		return types.Dimension{}, fmt.Errorf("Error Get Orientation Tag: %s", err)
-	}
-	if oValue == 8 || oValue == 6 { // Swap width and height if rotation 90 or -90 degree
-		imgDim.Length, imgDim.Width = imgDim.Width, imgDim.Length
-	}
-	return imgDim, nil
-	//return imgDim, fmt.Errorf("error testing")
-}
 func WriteWorldFileParametersToFile(filePath string, p types.WorldFileParameter) error {
 	content := fmt.Sprintf("%.20f\n%.20f\n%.20f\n%.20f\n%.20f\n%.20f\n", p.A, p.D, p.B, p.E, p.C, p.F)
 	err := os.WriteFile(filePath, []byte(content), 0644)
@@ -247,68 +209,31 @@ func GetOrientationRemovedRasterFeaturePoints(filePath string) ([]types.Coord, e
 	} else if orientationTag == 6 {
 		returnOrientation = -90
 	}
-	fmt.Println("returnOrientation : ")
-	fmt.Println(returnOrientation)
-	fmt.Println(orientationTag)
-
-	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
-	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s',False,%v))`, safePath, returnOrientation)
-	cmd := exec.Command("python-embed/python.exe", "-c", pythonCode)
-	//cmd := exec.Command("build/bin/python-embed/python.exe", "-c", pythonCode)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow: true,
-	}
-	fmt.Println(cmd.Args)
-	rasterFeaturePoints, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to call python function. error : %s.", err.Error())
-	}
-
-	var points types.FeaturePoints
-	// fmt.Println("#############")
-	// fmt.Println(string(rasterFeaturePoints))
-	// fmt.Println("#############")
-	err = json.Unmarshal(rasterFeaturePoints, &points)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to Unmarshal rasterFeaturePoints. error : %s.", err.Error())
-	}
-	return points.Points, nil
+	return getRasterFeaturePoints(filePath, returnOrientation)
 }
 func GetRasterFeaturePoints(filePath string) ([]types.Coord, error) {
+	return getRasterFeaturePoints(filePath, 0)
+}
+
+func getRasterFeaturePoints(filePath string, orientation int) ([]types.Coord, error) {
 	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
-	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,0))`, safePath)
-	cmd := exec.Command("python-embed/python.exe", "-c", pythonCode)
+	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,%v))`, safePath, orientation)
+	cmd := exec.Command("python", "-c", pythonCode)
 	//cmd := exec.Command("build/bin/python-embed/python.exe", "-c", pythonCode)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
 	}
-	fmt.Println(cmd.Args)
 	rasterFeaturePoints, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to call python function. error : %s.", err.Error())
 	}
 
 	var points types.FeaturePoints
-	// fmt.Println("#############")
-	// fmt.Println(string(rasterFeaturePoints))
-	// fmt.Println("#############")
 	err = json.Unmarshal(rasterFeaturePoints, &points)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to Unmarshal rasterFeaturePoints. error : %s.", err.Error())
 	}
 	return points.Points, nil
-}
-func RemoveAll(dir string) error {
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		return os.RemoveAll(path)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func SaveFile(filePath string, fileHeader *multipart.FileHeader) error {
@@ -344,39 +269,7 @@ func AllNotNil(data ...any) bool {
 	}
 	return true
 }
-func ZipDirectory(source string, zipWriter *zip.Writer, basePath string) error {
-	files, err := os.ReadDir(source)
-	if err != nil {
-		return err
-	}
 
-	for _, file := range files {
-		filePath := filepath.Join(source, file.Name())
-		relPath, _ := filepath.Rel(basePath, filePath)
-
-		if file.IsDir() {
-			if err := ZipDirectory(filePath, zipWriter, basePath); err != nil {
-				return err
-			}
-		} else {
-			fileWriter, err := zipWriter.Create(relPath)
-			if err != nil {
-				return err
-			}
-
-			fileReader, err := os.Open(filePath)
-			if err != nil {
-				return err
-			}
-			defer fileReader.Close()
-
-			if _, err := io.Copy(fileWriter, fileReader); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
 func CalculateRotationAngle(point1, point2 types.Coord) float64 {
 	// Calculate the differences in x and y coordinates
 	x1, y1 := point1[0], point1[1]
