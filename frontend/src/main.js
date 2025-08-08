@@ -126,7 +126,7 @@ document.querySelector('#app').innerHTML = `
   <section class="input-box" role="tabpanel" aria-labelledby="tab-about" id="about" tabindex="0" hidden>
     <h3>Geomatis-Desktop Version 1.0</h3>
     <h4>About</h4>
-    <p>Geomatis is used for automatic georeferencing of WS maps resulting from BPS survey activities. This app will create world files (.jwg for .jpg image / .pgw for .png image) to store georeferencing information for raster images.</p>
+    <p>Geomatis is used for automatic georeferencing of WS maps resulting from BPS-Statistics Indonesia's survey activities. This app will create world files (.jwg for .jpg image / .pgw for .png image) to store georeferencing information for raster images.</p>
     <h4>Requirements</h4>
     <ul>
       <li> The scanned map file name must begin with <strong>IDSLS</strong>, for example: <code>64710500010001.jpg</code>, <code>64710500010001_WS.jpg</code>. The program will take the first 14 digits of the file name to match it with the IDSLS in the digital SLS master. </li>
@@ -160,7 +160,6 @@ document.querySelector('#app').innerHTML = `
     <p>
       <b>Nahar RN</b>
       <br>github.com/nahrx
-      <br>naharprogrammer@gmail.com
     </p>
   </section>
   <div>

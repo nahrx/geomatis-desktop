@@ -1,6 +1,6 @@
 
 # geomatis-desktop
-This application is used to georeference  WS and WB maps resulting from survey/census activities conducted by BPS (Statistics Indonesia). The application generates world files (i.e., .jgw files for .jpg raster maps) containing georeferencing information for the WS/WB raster maps.
+This application is used to georeference  WS and WB maps resulting from survey/census activities conducted by BPS-Statistics Indonesia. The application generates world files (i.e. generate .jgw files for .jpg raster maps) containing georeferencing information for the WS/WB raster maps.
 
 Up to now, georeferencing at BPS has been done manually, one map at a time, using QGIS. This method is time-consuming, as georeferencing a single map takes around 2–5 minutes, while the number of maps to be georeferenced can reach thousands, corresponding to the number of local environment unit or census blocks in a regency/city. Therefore, this application was developed to make the georeferencing process faster and more efficient. In just 1–2 minutes, thousands of maps can be automatically georeferenced.
 
