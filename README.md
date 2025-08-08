@@ -14,10 +14,10 @@ check out our ready to use geomatis-desktop [installer here](https://github.com/
 	``` pip install opencv-python```
 4. Install Go 
 6. rename ```config.development.json``` into ```config.json```
-7. Run the application using wails
+7. Run the application using wails command below
 	```wails dev```
 	or
-	```wails build``` for production
+	```wails build``` to compile the code into build/bin directory. Before running the app, make sure you place the binary file with pypy.py in the same directory.
 
 ## Quick Guide
 1. Go to Georeference Page\
