@@ -156,11 +156,12 @@ document.querySelector('#app').innerHTML = `
       <li>Upload the map rasters to be georeferenced from computer</li>
       <li>Start the georeferencing process</li>
     </ol>
-    <h4>Contact Programmer</h4>
+    <h4>Programmer</h4>
     <p>
-      <b>nahar.nasrullah@bps.go.id</b>
+      <b>Nahar RN</b>
+      <br>github.com/nahrx
+      <br>naharprogrammer@gmail.com
     </p>
-    <p>BPS Kota Balikpapan</p>
   </section>
   <div>
     <div class="log-result" id="log" aria-live="polite" aria-atomic="true"></div>
