@@ -1,0 +1,14 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "Geomatis",
+  "description": "Automatically georeference raster maps from BPS-Statistic Indonesia survey/census",
+  "outputfilename": "Geomatis",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Nahar RN",
+    "email": "nahar.nasrullah@bps.go.id"
+  }
+}

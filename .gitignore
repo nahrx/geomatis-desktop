@@ -1,0 +1,11 @@
+__pycache__
+build/bin
+node_modules
+frontend/dist
+example/raster-scanned-maps
+example/master-maps
+perancangan
+config.json
+config.production.json
+build.bat
+build.sh
