@@ -7,7 +7,7 @@ Up to now, georeferencing at BPS has been done manually, one map at a time, usin
 ## Distribution
 check out our ready to use geomatis-desktop [installer here](https://github.com/nahrx/geomatis-desktop/releases)
 
-## Installation
+## Installation for Development
 1. Install python 3
 2. Install PIP
 3. Install opencv library using this command
