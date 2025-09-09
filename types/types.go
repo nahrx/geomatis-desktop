@@ -19,6 +19,7 @@ type GeoreferenceSettings struct {
 	MasterMapSource   string //database or file
 	MasterMap         string
 	AttrKey           string
+	RasterRotation    float64 // 0, 90, -90, 180
 	RasterKeySettings *RasterKeySettings
 	// TargetDir             string
 	// SeparateDirAttrs      []string
@@ -31,6 +32,7 @@ func (g *GeoreferenceSettings) Prepare() {
 	g.RasterFeatureSettings = &RasterFeatureSettings{}
 
 	g.AttrKey = "idsls"
+	g.RasterRotation = 0
 	g.RasterKeySettings.Type = "prefix"
 	g.RasterKeySettings.NumChar = 14
 	g.RasterFeatureSettings.Margin = 0.05 // 5 persen

@@ -75,18 +75,24 @@ func (a *App) GeoreferenceWorker(id int, rasterFilePath <-chan string, results c
 			results <- result
 			continue
 		}
-
+		// Get rotation degreee from EXIF orientation tag
+		g.RasterRotation, err = util.GeRotationDegree(rasterPath)
+		if err != nil {
+			result.Error = fmt.Errorf("Error GeRotationDegree : %s.", err.Error())
+			results <- result
+			continue
+		}
 		//need to edit the featurePoints variable back to the normal orientationtag(value = 1)
 		featurePoints := []types.Coord{}
 		if orientation {
-			featurePoints, err = util.GetRasterFeaturePoints(rasterPath)
+			featurePoints, err = util.GetRasterFeaturePoints(rasterPath, 0)
 			if err != nil {
 				result.Error = fmt.Errorf("Error GetRasterFeaturePoints : %s.", err.Error())
 				results <- result
 				continue
 			}
 		} else {
-			featurePoints, err = util.GetOrientationRemovedRasterFeaturePoints(rasterPath)
+			featurePoints, err = util.GetRasterFeaturePoints(rasterPath, g.RasterRotation)
 			if err != nil {
 				result.Error = fmt.Errorf("Error GetRasterFeaturePoints : %s.", err.Error())
 				results <- result
@@ -95,7 +101,7 @@ func (a *App) GeoreferenceWorker(id int, rasterFilePath <-chan string, results c
 		}
 
 		//Calculate Georeference Parameter and save world file
-		parameter := util.CalculateGeoreferenceParameters(imgDim, featurePoints, *polygonExtent, g.RasterFeatureSettings.Margin)
+		parameter := util.CalculateGeoreferenceParameters(imgDim, featurePoints, *polygonExtent, g.RasterFeatureSettings.Margin, g.RasterRotation)
 		worldFileExt := GetWorldFileExtlist()[strings.ToLower(path.Ext(rasterPath))]
 		fmt.Println("worldFileExt : ", worldFileExt)
 		worldFileName := fmt.Sprintf("%s%s", util.FileNameWithoutExtension(rasterPath), worldFileExt)

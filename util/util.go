@@ -65,7 +65,7 @@ func calculateCentroid(points []types.Coord) types.Coord {
 
 	return types.Coord{centroidX, centroidY}
 }
-func CalculateGeoreferenceParameters(img types.Dimension, rasterPoints []types.Coord, extent types.Extent, margin float64) *types.WorldFileParameter {
+func CalculateGeoreferenceParameters(img types.Dimension, rasterPoints []types.Coord, extent types.Extent, margin float64, imageRotation float64) *types.WorldFileParameter {
 	// WorldFileParameter : A, D, B, E, C, F
 	var scale, x, y float64
 
@@ -78,21 +78,42 @@ func CalculateGeoreferenceParameters(img types.Dimension, rasterPoints []types.C
 	featureImg, _ := GetFeatureDimensions(diagonal, margin)
 
 	angle := CalculateRotationAngle(diagonal.TopLeft, diagonal.TopRight)
-	if deltaX > deltaY || img.Length > img.Width {
-		if deltaX < deltaY { // portrait polygon
-			angle = angle - 90
-			fmt.Println("angle = angle - 90")
-		} else if img.Length < img.Width {
-			angle = angle + 90
-			fmt.Println("angle = angle + 90")
-		}
+
+	//if the polygon is landscape, but the image is portrait
+	if deltaX > deltaY && img.Length < img.Width {
+		angle = angle + 90
+		fmt.Println("angle = angle + 90")
+	}
+	//if the polygon is portrait, but the image is landscape
+	if deltaX < deltaY && img.Length > img.Width {
+		angle = angle - 90
+		fmt.Println("angle = angle - 90")
+	}
+
+	/*if the image is portrait and rotated 90 degrees (counter clockwise), rotate it 180 degrees*/
+	/*if the image is portrait and rotated -90 degrees (clockwise), ignore it*/
+	if img.Length < img.Width && imageRotation == 90 {
+		angle = angle + 180
+	}
+	/*if the image is landscape and rotated 90 degrees (counter clockwise), ignore it*/
+	/*if the image is landscape and rotated -90 degrees (clockwise), rotate it 180 degrees*/
+	if img.Length > img.Width && imageRotation == -90 {
+		angle = angle + 180
+	}
+
+	// if the image is rotated 180 degrees
+	if imageRotation == 180 {
+		angle = angle + 180
 	}
 
 	LWPolygon := LW(polygon)
 	LWFeatureImg := LW(featureImg)
 
 	radian := math.Pi * angle / 180.0
-	if DimRatio(LWPolygon) >= DimRatio(LWFeatureImg) { // condong horizontal
+
+	fmt.Println("image rotation : ", imageRotation)
+
+	if DimRatio(LWPolygon) >= DimRatio(LWFeatureImg) { // horizontally tilted
 		//Scale X
 		scale = LWPolygon.Length / LWFeatureImg.Length
 
@@ -106,8 +127,6 @@ func CalculateGeoreferenceParameters(img types.Dimension, rasterPoints []types.C
 		{extent.MaxX, extent.MinY},
 		{extent.MaxX, extent.MaxY},
 	}
-	//if orientation tag 6 atau 8 (+90 atau -90 derajat)=> ubah coordinat centroid ketika image tidak berotasi atau 0 derajat
-	//
 
 	featureImgCentroid := calculateCentroid(rasterPoints)
 	polygonCentroid := calculateCentroid(polygonPoint)
@@ -137,6 +156,32 @@ func GetImageDimensions(file io.Reader) (types.Dimension, error) {
 		Length: float64(imgConfig.Width),
 		Width:  float64(imgConfig.Height),
 	}, nil
+}
+func GeRotationDegree(filepath string) (float64, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return 0, nil
+	}
+	defer file.Close()
+
+	var rotation float64
+	orientationTag, err := GetOrientationTag(file)
+
+	if err != nil {
+		return 0, fmt.Errorf("Error GetOrientationTag : %w", err)
+	}
+	/*In standard mathematical convention,
+	positive angles are measured counterclockwise (anticlockwise) from the positive x-axis,
+	while negative angles are measured clockwise.
+	*/
+	if orientationTag == 8 {
+		rotation = -90
+	} else if orientationTag == 3 {
+		rotation = 180
+	} else if orientationTag == 6 {
+		rotation = 90
+	}
+	return rotation, nil
 }
 func GetOrientationTag(file io.Reader) (int, error) {
 	//time.Sleep(2 * time.Second)
@@ -190,35 +235,11 @@ func WriteWorldFileParametersToFile(filePath string, p types.WorldFileParameter)
 	}
 	return nil
 }
-func GetOrientationRemovedRasterFeaturePoints(filePath string) ([]types.Coord, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
 
-	var returnOrientation int
-	orientationTag, err := GetOrientationTag(file)
-
-	if err != nil {
-		return nil, fmt.Errorf("Error GetOrientationTag : %w", err)
-	}
-	if orientationTag == 8 {
-		returnOrientation = 90
-	} else if orientationTag == 3 {
-		returnOrientation = 180
-	} else if orientationTag == 6 {
-		returnOrientation = -90
-	}
-	return getRasterFeaturePoints(filePath, returnOrientation)
-}
-func GetRasterFeaturePoints(filePath string) ([]types.Coord, error) {
-	return getRasterFeaturePoints(filePath, 0)
-}
-
-func getRasterFeaturePoints(filePath string, orientation int) ([]types.Coord, error) {
+func GetRasterFeaturePoints(filePath string, orientation float64) ([]types.Coord, error) {
 	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
 	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,%v))`, safePath, orientation)
-	cmd := exec.Command("python", "-c", pythonCode)
+	cmd := exec.Command("python-embed/python.exe", "-c", pythonCode)
 	//cmd := exec.Command("build/bin/python-embed/python.exe", "-c", pythonCode)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,

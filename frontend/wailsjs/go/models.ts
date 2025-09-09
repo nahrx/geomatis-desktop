@@ -98,6 +98,7 @@ export namespace types {
 	    MasterMapSource: string;
 	    MasterMap: string;
 	    AttrKey: string;
+	    RasterRotation: number;
 	    RasterKeySettings?: RasterKeySettings;
 	    RasterFeatureSettings?: RasterFeatureSettings;
 	
@@ -110,6 +111,7 @@ export namespace types {
 	        this.MasterMapSource = source["MasterMapSource"];
 	        this.MasterMap = source["MasterMap"];
 	        this.AttrKey = source["AttrKey"];
+	        this.RasterRotation = source["RasterRotation"];
 	        this.RasterKeySettings = this.convertValues(source["RasterKeySettings"], RasterKeySettings);
 	        this.RasterFeatureSettings = this.convertValues(source["RasterFeatureSettings"], RasterFeatureSettings);
 	    }
