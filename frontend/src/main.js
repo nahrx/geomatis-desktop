@@ -124,7 +124,7 @@ document.querySelector('#app').innerHTML = `
   </section>
   <!-- About Tab -->
   <section class="input-box" role="tabpanel" aria-labelledby="tab-about" id="about" tabindex="0" hidden>
-    <h3>Geomatis-Desktop Version 1.0</h3>
+    <h3>Geomatis-Desktop Version 1.2</h3>
     <h4>About</h4>
     <p>Geomatis is used for automatic georeferencing of WS maps resulting from BPS-Statistics Indonesia's survey activities. This app will create world files (.jwg for .jpg image / .pgw for .png image) to store georeferencing information for raster images.</p>
     <h4>Requirements</h4>
