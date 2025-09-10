@@ -239,7 +239,7 @@ func WriteWorldFileParametersToFile(filePath string, p types.WorldFileParameter)
 func GetRasterFeaturePoints(filePath string, orientation float64) ([]types.Coord, error) {
 	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
 	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,%v))`, safePath, orientation)
-	cmd := exec.Command("python-embed/python.exe", "-c", pythonCode)
+	cmd := exec.Command("python", "-c", pythonCode)
 	//cmd := exec.Command("build/bin/python-embed/python.exe", "-c", pythonCode)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
