@@ -313,8 +313,17 @@ func (s *PostgreStorage) CreateMasterMaps(tableName string, fileData *[]byte) er
 				return fmt.Errorf("error geojson.Encode : %w", err)
 			}
 
+			// If the GeoJSON coordinates carry a Z value (elevation), the
+			// geometry column must be declared with a Z dimension too --
+			// otherwise PostGIS rejects every insert with
+			// "Geometry has Z dimension but column does not".
+			geomType := geometry.Type
+			if feature.Geometry.Layout().ZIndex() >= 0 {
+				geomType += "Z"
+			}
+
 			propTypes := constructDataTypes(feature.Properties)
-			propTypes["geom"] = fmt.Sprintf("geometry(%v, %v)", geometry.Type, 4326)
+			propTypes["geom"] = fmt.Sprintf("geometry(%s, %v)", geomType, 4326)
 
 			_, err = s.createTable(tableName, propTypes)
 			if err != nil {
