@@ -128,7 +128,7 @@ func GetRasterKey(filename string, rasterKeySettings *types.RasterKeySettings) (
 	if len(filename) < rasterKeySettings.NumChar {
 		return "", fmt.Errorf("Length of string is not enough (less than rasterKeySettings.NumChar)")
 	}
-	switch rasterKeySettings.Type {
+	switch rasterKeySettings.Category {
 	case "all":
 		return filename, nil
 	case "prefix":

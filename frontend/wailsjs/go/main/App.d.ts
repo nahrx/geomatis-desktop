@@ -20,7 +20,7 @@ export function GetMasterMaps():Promise<Array<types.MasterMap>>;
 
 export function LoadDbConfig():Promise<storage.Config>;
 
-export function ProcessGeoreference(arg1:Array<string>,arg2:string,arg3:string,arg4:string):Promise<Array<string>>;
+export function ProcessGeoreference(arg1:Array<string>,arg2:string,arg3:string):Promise<Array<string>>;
 
 export function SaveDbConfig(arg1:storage.Config):Promise<void>;
 

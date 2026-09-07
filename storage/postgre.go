@@ -9,8 +9,7 @@ import (
 	"geomatis-desktop/bpsmap"
 	"geomatis-desktop/types"
 
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/twpayne/go-geom/encoding/geojson"
 )
 
@@ -35,10 +34,10 @@ func makeSqlScanFunc[T comparable](columns []T) []interface{} {
 }
 
 func NewPostgreStorage(c Config) (*PostgreStorage, error) {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Error loading .env file")
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	fmt.Println("Error loading .env file")
+	// }
 	dbHost := c.DBHost
 	dbPort := c.DBPort
 	dbDatabase := c.DBDatabase
@@ -85,7 +84,7 @@ func EnsurePostGISExtension(db *sql.DB) error {
 func (s *PostgreStorage) Close() error {
 	err := s.Db.Close()
 	if err != nil {
-		fmt.Errorf("Failed to disconnect database : %w", err)
+		return fmt.Errorf("Failed to disconnect database : %w", err)
 	}
 	return nil
 }
@@ -216,24 +215,51 @@ func (s *PostgreStorage) GetMasterMapAttributes(masterMap string) ([]types.Maste
 	return values, nil
 }
 
+// getGeometryColumn detects the geometry column name of a table via PostGIS's
+// geometry_columns view, instead of assuming a fixed name like "geom".
+func (s *PostgreStorage) getGeometryColumn(tableName string) (string, error) {
+	var col string
+	err := s.Db.QueryRow(`
+		SELECT f_geometry_column
+		FROM geometry_columns
+		WHERE f_table_schema = 'public' AND f_table_name = $1
+		LIMIT 1
+	`, tableName).Scan(&col)
+	if err != nil {
+		return "", fmt.Errorf("failed to detect geometry column of table %s: %w", tableName, err)
+	}
+	return col, nil
+}
+
 func (s *PostgreStorage) GetExtent(tableName, idSls string, mapType bpsmap.BpsMap) (*types.Extent, error) {
 
-	// Query to get the bounding box coordinates
-	query := fmt.Sprintf("SELECT ST_XMin(ST_Extent(geom)), ST_YMin(ST_Extent(geom)), ST_XMax(ST_Extent(geom)), ST_YMax(ST_Extent(geom)) FROM %s WHERE %s = '%s'", tableName, mapType.GetKeyName(), idSls)
+	geomCol, err := s.getGeometryColumn(tableName)
+	if err != nil {
+		return nil, err
+	}
+	geomColQuoted := pq.QuoteIdentifier(geomCol)
 
-	var minX, minY, maxX, maxY float64
-	err := s.Db.QueryRow(query).Scan(&minX, &minY, &maxX, &maxY)
+	// Query to get the bounding box coordinates
+	keyName := mapType.GetKeyName()
+	query := fmt.Sprintf("SELECT ST_XMin(ST_Extent(%s)), ST_YMin(ST_Extent(%s)), ST_XMax(ST_Extent(%s)), ST_YMax(ST_Extent(%s)) FROM %s WHERE %s = '%s'",
+		geomColQuoted, geomColQuoted, geomColQuoted, geomColQuoted, tableName, keyName, idSls)
+
+	var minX, minY, maxX, maxY sql.NullFloat64
+	err = s.Db.QueryRow(query).Scan(&minX, &minY, &maxX, &maxY)
 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to fetch bounding box from database. Make sure your raster filename is correct and has a polygon in digital master map. Error :%v - %v - %s", tableName, idSls, err.Error())
 	}
+	if !minX.Valid || !minY.Valid || !maxX.Valid || !maxY.Valid {
+		return nil, fmt.Errorf("no polygon found in table %q where %s = '%s' (raster key extracted from filename). Check that the value exists in the %s column and that %s is really the correct key column for this master map", tableName, keyName, idSls, keyName, keyName)
+	}
 
 	// Create a BoundingBox object with the coordinates
 	extent := types.Extent{
-		MinX: minX,
-		MinY: minY,
-		MaxX: maxX,
-		MaxY: maxY,
+		MinX: minX.Float64,
+		MinY: minY.Float64,
+		MaxX: maxX.Float64,
+		MaxY: maxY.Float64,
 	}
 
 	return &extent, nil
@@ -368,10 +394,11 @@ func constructDataTypes(prop map[string]interface{}) map[string]string {
 	return propTypes
 }
 func (s *PostgreStorage) createTable(name string, attr map[string]string) (string, error) {
-	// Construct Query statement
-	query := `CREATE TABLE ` + name + ` (
-		gid serial primary key,`
-	i := 0
+	// Construct Query statement. Column names come from user-uploaded GeoJSON
+	// property names, so they must be quoted as identifiers -- otherwise a
+	// property name with a space, hyphen, or other special character breaks
+	// the SQL syntax.
+	columns := []string{"gid serial primary key"}
 	for key, val := range attr {
 		var dType string
 		switch val {
@@ -387,14 +414,9 @@ func (s *PostgreStorage) createTable(name string, attr map[string]string) (strin
 		if key == "gid" {
 			key = "__gid"
 		}
-		query = fmt.Sprintf(query+"%v %v", key, dType)
-		if i < len(attr)-1 {
-			query = query + ","
-		}
-
-		i++
+		columns = append(columns, fmt.Sprintf("%s %s", pq.QuoteIdentifier(key), dType))
 	}
-	query = query + ");"
+	query := fmt.Sprintf("CREATE TABLE %s (\n%s\n);", pq.QuoteIdentifier(name), strings.Join(columns, ",\n"))
 
 	// Execute the CREATE table
 	_, err := s.Db.Exec(query)
@@ -404,44 +426,38 @@ func (s *PostgreStorage) createTable(name string, attr map[string]string) (strin
 	return query, nil
 }
 func (s *PostgreStorage) insertData(tableName string, data map[string]interface{}) (string, error) {
-	query := `INSERT INTO ` + tableName + ` (%v) VALUES (%v)`
-	i := 0
-	insertInto := ""
-	values := ""
+	// Column names come from GeoJSON property names (quoted as identifiers,
+	// same reasoning as createTable), and values are passed as query
+	// parameters ($1, $2, ...) instead of being concatenated into the SQL
+	// string -- this avoids breaking on special characters (e.g. an
+	// apostrophe in a text value) and closes a SQL injection hole.
+	columns := make([]string, 0, len(data))
+	placeholders := make([]string, 0, len(data))
+	values := make([]interface{}, 0, len(data))
+	argIndex := 1
 	for key, val := range data {
 		if key == "gid" {
 			key = "__gid"
 		}
+		columns = append(columns, pq.QuoteIdentifier(key))
 
-		var dType string
-		dType = fmt.Sprintf("%T", val)
-
-		switch dType {
-		case "string":
-			val = fmt.Sprintf("'%v'", val)
-		case "int":
-		case "int32":
-		case "int64":
-		case "float64":
-			val = fmt.Sprintf("%v", val)
+		if key == "geom" {
+			// geom is already a raw SQL expression built by the caller
+			// (e.g. ST_SetSRID(ST_GeomFromGeoJSON('...'), 4326)), not a
+			// plain value, so it must stay embedded in the query text
+			// rather than be passed as a parameter.
+			placeholders = append(placeholders, fmt.Sprintf("%s", val))
+			continue
 		}
 
-		if val == nil {
-			val = "null"
-		}
-		insertInto = insertInto + fmt.Sprintf("%v", key)
-		values = values + fmt.Sprintf("%s", val)
-		if i < len(data)-1 {
-			insertInto = insertInto + ","
-			values = values + ","
-		}
-		i++
+		placeholders = append(placeholders, fmt.Sprintf("$%d", argIndex))
+		values = append(values, val)
+		argIndex++
 	}
-	query = fmt.Sprintf(query, insertInto, values)
-	//insert := fmt.Sprintf("INSERT INTO your_table_name (geometry, name) VALUES (ST_SetSRID(ST_GeomFromGeoJSON('%s'), 4326), $1)", geom)
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", pq.QuoteIdentifier(tableName), strings.Join(columns, ","), strings.Join(placeholders, ","))
 
 	// Execute the INSERT statement
-	_, err := s.Db.Exec(query)
+	_, err := s.Db.Exec(query, values...)
 	if err != nil {
 		return query, err
 	}

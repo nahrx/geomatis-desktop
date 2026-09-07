@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -239,14 +240,23 @@ func WriteWorldFileParametersToFile(filePath string, p types.WorldFileParameter)
 func GetRasterFeaturePoints(filePath string, orientation float64) ([]types.Coord, error) {
 	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
 	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,%v))`, safePath, orientation)
-	cmd := exec.Command("python", "-c", pythonCode)
-	//cmd := exec.Command("build/bin/python-embed/python.exe", "-c", pythonCode)
+
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve application path. error : %s.", err.Error())
+	}
+	appDir := filepath.Dir(exePath)
+	//pythonPath := filepath.Join(appDir, "python-embed", "python.exe")
+	pythonPath := filepath.Join("python.exe")
+
+	cmd := exec.Command(pythonPath, "-c", pythonCode)
+	cmd.Dir = appDir // so `import pypy` finds pypy.py next to the executable, regardless of the process's cwd
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
 	}
 	rasterFeaturePoints, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to call python function. error : %s.", err.Error())
+		return nil, fmt.Errorf("Failed to call python function. error : %s. output : %s", err.Error(), string(rasterFeaturePoints))
 	}
 
 	var points types.FeaturePoints

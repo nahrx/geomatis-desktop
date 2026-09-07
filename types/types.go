@@ -6,24 +6,24 @@ import (
 )
 
 type RasterKeySettings struct {
-	Type    string
-	NumChar int
-	Regex   *regexp.Regexp
+	Category string         `json:"type"`
+	NumChar  int            `json:"num_char"`
+	Regex    *regexp.Regexp `json:"-"`
 }
 type RasterFeatureSettings struct {
-	XPosition string
-	YPosition string
-	Margin    float64
+	XPosition string  `json:"x_position"`
+	YPosition string  `json:"y_position"`
+	Margin    float64 `json:"margin"`
 }
 type GeoreferenceSettings struct {
-	MasterMapSource   string //database or file
-	MasterMap         string
-	AttrKey           string
-	RasterRotation    float64 // 0, 90, -90, 180
-	RasterKeySettings *RasterKeySettings
+	MasterMapSource   string  `json:"master_map_source"`
+	MasterMap         string  `json:"master_map"`
+	AttrKey           string  `json:"attr_key"`
+	RasterRotation    float64 `json:"raster_rotation"` // 0, 90, -90, 180
+	RasterKeySettings *RasterKeySettings `json:"raster_key_settings"`
 	// TargetDir             string
 	// SeparateDirAttrs      []string
-	RasterFeatureSettings *RasterFeatureSettings
+	RasterFeatureSettings *RasterFeatureSettings `json:"raster_feature_settings"`
 }
 
 func (g *GeoreferenceSettings) Prepare() {
@@ -31,10 +31,10 @@ func (g *GeoreferenceSettings) Prepare() {
 	g.RasterKeySettings = &RasterKeySettings{}
 	g.RasterFeatureSettings = &RasterFeatureSettings{}
 
-	g.AttrKey = "idsls"
+	g.AttrKey = "idsubsls"
 	g.RasterRotation = 0
-	g.RasterKeySettings.Type = "prefix"
-	g.RasterKeySettings.NumChar = 14
+	g.RasterKeySettings.Category = "prefix"
+	g.RasterKeySettings.NumChar = 16
 	g.RasterFeatureSettings.Margin = 0.05 // 5 persen
 	g.RasterFeatureSettings.XPosition = "none"
 	g.RasterFeatureSettings.YPosition = "none"

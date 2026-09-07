@@ -10,3 +10,4 @@ config.production.json
 build.bat
 build.sh
 example/*.qgz
+example/rasters/*.jgw

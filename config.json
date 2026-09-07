@@ -1,7 +1,7 @@
 {
- "DB_HOST": "localhost",
+ "DB_HOST": "192.168.50.212",
  "DB_PORT": 5432,
- "DB_DATABASE": "geomatis",
+ "DB_DATABASE": "master",
  "DB_USERNAME": "postgres",
  "DB_PASSWORD": "jawa"
 }

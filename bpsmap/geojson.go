@@ -28,6 +28,7 @@ type Feature struct {
 }
 
 type Properties struct {
+	Idsubsls string `json:"idsubsls"`
 	Idsls string `json:"idsls"`
 	Idbs  string `json:"idbs"`
 }

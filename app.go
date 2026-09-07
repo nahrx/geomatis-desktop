@@ -237,61 +237,60 @@ func (a *App) SelectRasterFiles() ([]string, error) {
 	return file, nil
 }
 
-func (a *App) ProcessGeoreference(filePaths []string, masterMap string, masterMapType string, masterMapSource string) ([]string, error) {
+func (a *App) ProcessGeoreference(filePaths []string, masterMapType string,georeferenceSettings string) ([]string, error) {
 	log := []string{}
-	if masterMap == "" {
-		return nil, fmt.Errorf("missing master map")
-	}
 	if len(filePaths) == 0 {
 		return nil, fmt.Errorf("missing raster file")
 	}
+	gSetting := types.GeoreferenceSettings{}
+	err := json.Unmarshal([]byte(georeferenceSettings), &gSetting)
+	if err!=nil{
+		return nil, fmt.Errorf("error json.Unmarshal georeferenceSettings")
+	}
 
-	gSettings := types.GeoreferenceSettings{}
-	gSettings.Prepare()
-	gSettings.MasterMap = masterMap
+		var mapType bpsmap.BpsMap
+	if masterMapType == "wss" {
+		mapType = bpsmap.WssMap{}
+	} else if masterMapType == "ws" {
+		mapType = bpsmap.WsMap{}
+	} else if masterMapType == "wb" {
+		mapType = bpsmap.WbMap{}
+	} else {
+		return nil, fmt.Errorf("Error select mapType")
+	}
+	finalGSetting := mapType.GetGeoreferenceSetting(gSetting)
 
-	if masterMapSource == "database" {
+	
+	//gSettings.Prepare()
+
+	if finalGSetting.MasterMapSource == "database" {
 		if a.store == nil {
 			return nil, fmt.Errorf("database not connected")
 		}
 
-		masterMapExist, err := a.store.MasterMapExist(masterMap)
+		masterMapExist, err := a.store.MasterMapExist(finalGSetting.MasterMap)
 		if err != nil {
 			return nil, fmt.Errorf("Error when calling MasterMapExist. Error :  %s", err.Error())
 		}
 		if !masterMapExist {
-			return nil, fmt.Errorf("%s is not found in the database. Error :  %s", masterMap, err.Error())
+			return nil, fmt.Errorf("%s is not found in the database", finalGSetting.MasterMap)
 		}
-		attrKeyExist, err := a.store.MasterMapAttributeExist(masterMap, gSettings.AttrKey)
+		attrKeyExist, err := a.store.MasterMapAttributeExist(finalGSetting.MasterMap, finalGSetting.AttrKey)
 		if err != nil {
-			return nil, fmt.Errorf("Error when calling MasterMapExist. Error :  %s", err.Error())
+			return nil, fmt.Errorf("Error when calling MasterMapAttributeExist. Error :  %s", err.Error())
 		}
 		if !attrKeyExist {
-			return nil, fmt.Errorf("%s is not found in the database. Error :  %s", masterMap, err.Error())
+			return nil, fmt.Errorf("attribute key %q is not found in table %s", finalGSetting.AttrKey, finalGSetting.MasterMap)
 		}
 
-	} else if masterMapSource == "file" {
+	} else if finalGSetting.MasterMapSource == "file" {
 		if a.extent == nil {
 			return nil, fmt.Errorf("geojson file is not ready")
 		}
 	} else {
 		return nil, fmt.Errorf("masterMapSource not found")
 	}
-
-	//step : check if master map exist in database
-	//step : prepare georeference setting
-
-	gSettings.MasterMapSource = masterMapSource
-
-	var mapType bpsmap.BpsMap
-	if masterMapType == "ws" {
-		mapType = bpsmap.WsMap{}
-	} else if masterMapType == "wb" {
-		mapType = bpsmap.WsMap{}
-	} else {
-		return nil, fmt.Errorf("Error select mapType")
-	}
-
+	
 	numJobs := len(filePaths)
 	numWorkers := 20
 	if numJobs < numWorkers {
@@ -300,7 +299,7 @@ func (a *App) ProcessGeoreference(filePaths []string, masterMap string, masterMa
 	files := make(chan string, numJobs)
 	results := make(chan types.Result, numJobs)
 	for w := 0; w < numWorkers; w++ {
-		go a.GeoreferenceWorker(w, files, results, gSettings, mapType)
+		go a.GeoreferenceWorker(w, files, results, finalGSetting, mapType)
 	}
 
 	for j := 0; j < numJobs; j++ {

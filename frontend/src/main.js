@@ -1,19 +1,20 @@
-import './style.css';
-import logo from './assets/images/logo-universal.png';
-import { SelectRasterFiles, 
-  SelectGeojsonFileForGeoreference, 
-  ProcessGeoreference, 
-  ConnectToDB, 
-  DisconnectDB, 
-  SaveDbConfig, 
-  LoadDbConfig, 
-  GetMasterMaps, 
-  SelectGeojsonFile, 
-  CreateMasterMaps, 
-  DeleteMasterMap } 
-  from '../wailsjs/go/main/App';
+import "./style.css";
+import logo from "./assets/images/logo-universal.png";
+import {
+  SelectRasterFiles,
+  SelectGeojsonFileForGeoreference,
+  ProcessGeoreference,
+  ConnectToDB,
+  DisconnectDB,
+  SaveDbConfig,
+  LoadDbConfig,
+  GetMasterMaps,
+  SelectGeojsonFile,
+  CreateMasterMaps,
+  DeleteMasterMap,
+} from "../wailsjs/go/main/App";
 
-document.querySelector('#app').innerHTML = `
+document.querySelector("#app").innerHTML = `
 <main class="container" role="main">
   <img id="logo" class="logo">
   <h1>Geomatis</h1>
@@ -28,7 +29,11 @@ document.querySelector('#app').innerHTML = `
   <section class="input-box active" role="tabpanel" aria-labelledby="tab-georeferensi" id="georeferensi" tabindex="0" hidden>
     <label style="display: block;margin-top:5px"> Choose Map Type </label>
     <div class="map-option">
-      <input type="radio" id="ws-type" name="masterMapType" value="ws" checked="checked">
+      <input type="radio" id="wss-type" name="masterMapType" value="wss"checked="checked">
+      <div>
+        <label for="wss-type">WSS Map</label>
+      </div>
+      <input type="radio" id="ws-type" name="masterMapType" value="ws">
       <div>
         <label for="ws-type">WS Map</label>
       </div>
@@ -71,11 +76,21 @@ document.querySelector('#app').innerHTML = `
         <span class="material-icons">upload</span> Select raster files (jpg/png) </button>
       <div class="select-files" id="rasterFiles"> No raster selected </div>
     </div>
+
+      <!--label for="attributeKey">Attribute Key</!--label>
+      <input id="attributeKey" name="attributeKey" type="text" value="idsubsls" />
+      <label for="rasterKeyType">Raster Key Type</label>
+      <input id="rasterKeyType"  name="rasterKeyType" type="text" value="prefix" />
+      <label for="numChar">Number of Character</label>
+      <input id="numChar"  name="numChar" type="text" value="16" /-->
+      <label for="margin">Margin</label>
+      <input id="margin"  name="margin" type="text" value="0.05" />
+
     <button class="btn w-full" id="submitFilesButton" onclick="processGeoreference()">
       <span class="material-icons">play_arrow</span> Start Georeference </button>
   </section>
   <!-- Database Setting Tab -->
-  <section class="input-box " role="tabpanel" aria-labelledby="tab-database" id="database" tabindex="0">
+  <section class="input-box" role="tabpanel" aria-labelledby="tab-database" id="database" tabindex="0">
     <p>Setup and connect to postgresql database. instead of uploading the master map from file, we can use the master map from database.</p>
     <label for="databaseHost">Host</label>
     <input id="databaseHost" type="text" value="localhost" />
@@ -167,73 +182,79 @@ document.querySelector('#app').innerHTML = `
   </div>
 </main>
 `;
-document.getElementById('logo').src = logo;
+document.getElementById("logo").src = logo;
 const masterMapSelect = document.getElementById("masterMapSelect");
-const masterMapsTableBody = document.querySelector('#masterMapsTable tbody');
+const masterMapsTableBody = document.querySelector("#masterMapsTable tbody");
 
-const tabs = document.querySelectorAll('.tab');
-const tabsPrivate = document.querySelectorAll('.tab.private');
-const tabsPublic = document.querySelectorAll('.tab.public');
-const panels = document.querySelectorAll('.input-box');
+const tabs = document.querySelectorAll(".tab");
+const tabsPrivate = document.querySelectorAll(".tab.private");
+const tabsPublic = document.querySelectorAll(".tab.public");
+const panels = document.querySelectorAll(".input-box");
 
-var rasterFiles = document.getElementById('rasterFiles');
-var geojsonFile = document.getElementById('geojsonFile');
-var log = document.getElementById('log');
+var rasterFiles = document.getElementById("rasterFiles");
+var geojsonFile = document.getElementById("geojsonFile");
+var log = document.getElementById("log");
 let tabHandlers = new Map();
 
 var selectedRasterFiles = [];
 var selectedGeojsonFile = "";
 
-
 // Database ///////////////////////////////
 
 document.addEventListener("DOMContentLoaded", () => {
-  LoadDbConfig().then((config) => {
-    document.getElementById("databaseHost").value = config.DB_HOST;
-    document.getElementById("databasePort").value = config.DB_PORT;
-    document.getElementById("databaseName").value = config.DB_DATABASE;
-    document.getElementById("databaseUsername").value = config.DB_USERNAME;
-    document.getElementById("databasePassword").value = config.DB_PASSWORD;
-  }).catch((err) => {
-    log.innerHTML += "\nFailed to load DB config:" + err;
-  });
+  LoadDbConfig()
+    .then((config) => {
+      document.getElementById("databaseHost").value = config.DB_HOST;
+      document.getElementById("databasePort").value = config.DB_PORT;
+      document.getElementById("databaseName").value = config.DB_DATABASE;
+      document.getElementById("databaseUsername").value = config.DB_USERNAME;
+      document.getElementById("databasePassword").value = config.DB_PASSWORD;
+    })
+    .catch((err) => {
+      log.innerHTML += "\nFailed to load DB config:" + err;
+    });
 });
 
 window.saveDatabaseConfig = function () {
-  log.innerHTML = 'saving database config...';
+  log.innerHTML = "saving database config...";
   try {
     const config = getDbConfig();
 
-    SaveDbConfig(config).then((map) => {
-      log.innerHTML = `Configuration saved! ("${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.)`;
-    }).catch((error) => {
-      log.innerHTML = "Error saving config: " + error;
-    })
+    SaveDbConfig(config)
+      .then((map) => {
+        log.innerHTML = `Configuration saved! ("${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.)`;
+      })
+      .catch((error) => {
+        log.innerHTML = "Error saving config: " + error;
+      });
   } catch (error) {
     log.innerHTML = "Error saving config: " + error;
   }
 };
 window.connectDatabase = function () {
-  log.innerHTML = 'Connecting to database...';
+  log.innerHTML = "Connecting to database...";
   const config = getDbConfig();
-  ConnectToDB(config).then((maps) => {
-    log.innerHTML = `Connected to database "${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.`;
-    enableMenu();
-  }).catch((err) => {
-    log.innerHTML = "Error connect to database: " + error;
-  })
-}
+  ConnectToDB(config)
+    .then((maps) => {
+      log.innerHTML = `Connected to database "${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.`;
+      enableMenu();
+    })
+    .catch((err) => {
+      log.innerHTML = "Error connect to database: " + error;
+    });
+};
 window.disconnectDatabase = function () {
-
-  log.innerHTML = 'Disconnecting from database...';
+  log.innerHTML = "Disconnecting from database...";
   const config = getDbConfig();
-  DisconnectDB(config).then((maps) => {
-    log.innerHTML = `Disconnect database "${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.`;
-    disableMenu();
-  }).catch((err) => {
-    log.innerHTML = "Error disconnect database: " + error;
-  })
-}
+  DisconnectDB(config)
+    .then((maps) => {
+      log.innerHTML = `Disconnect database "${config.DB_DATABASE}" at ${config.DB_HOST} as ${config.DB_USERNAME}.`;
+      disableMenu();
+    })
+    .catch((err) => {
+      log.innerHTML = "Error disconnect database: " + error;
+    });
+};
 
 function getDbConfig() {
   const dbHost = document.getElementById("databaseHost").value.trim();
@@ -247,132 +268,149 @@ function getDbConfig() {
     DB_PORT: parseInt(dbPort),
     DB_DATABASE: dbName,
     DB_USERNAME: dbUser,
-    DB_PASSWORD: dbPass
+    DB_PASSWORD: dbPass,
   };
-  return config
+  return config;
 }
 
 function enableMenu() {
-  document.getElementById('connectDbBtn').style.display = 'none';
-  document.getElementById('disconnectDbBtn').style.display = 'inline-flex';
+  document.getElementById("connectDbBtn").style.display = "none";
+  document.getElementById("disconnectDbBtn").style.display = "inline-flex";
   refreshMasterMapsTable();
   disableDatabaseForm();
   enableTabListeners(tabs);
 }
 
 function disableMenu() {
-  document.getElementById('connectDbBtn').style.display = 'inline-flex';
-  document.getElementById('disconnectDbBtn').style.display = 'none';
+  document.getElementById("connectDbBtn").style.display = "inline-flex";
+  document.getElementById("disconnectDbBtn").style.display = "none";
   enableDatabaseForm();
   disableTabListeners(tabsPrivate);
 }
 function enableDatabaseForm() {
   const inputs = document.getElementById("database").querySelectorAll("input");
-  inputs.forEach(input => {
+  inputs.forEach((input) => {
     input.disabled = false;
   });
 }
 function disableDatabaseForm() {
   const inputs = document.getElementById("database").querySelectorAll("input");
-  inputs.forEach(input => {
+  inputs.forEach((input) => {
     input.disabled = true;
   });
-
 }
 
 window.refreshMasterMapsSelect = function () {
-  masterMapSelect.innerHTML = '<option disabled>Select Database...</option>'; // Clear existing "Loading..." option
-  GetMasterMaps().then((masterMaps) => {
-    if (masterMaps == null) {
-      const option = document.createElement('option');
-      option.textContent = "there is no data";
-      masterMapSelect.appendChild(option);
-    }
-    masterMaps.forEach((map) => {
-      const option = document.createElement('option');
-      option.value = map.name;
-      option.textContent = map.name;
-      masterMapSelect.appendChild(option);
+  masterMapSelect.innerHTML = "<option disabled>Select Database...</option>"; // Clear existing "Loading..." option
+  GetMasterMaps()
+    .then((masterMaps) => {
+      if (masterMaps == null) {
+        const option = document.createElement("option");
+        option.textContent = "there is no data";
+        masterMapSelect.appendChild(option);
+      }
+      masterMaps.forEach((map) => {
+        const option = document.createElement("option");
+        option.value = map.name;
+        option.textContent = map.name;
+        masterMapSelect.appendChild(option);
+      });
+    })
+    .catch((err) => {
+      log.innerHTML += "\nerror during load data : " + err;
     });
-  }).catch((err) => {
-    log.innerHTML += "\nerror during load data : " + err;
-  })
-}
+};
 
 window.refreshMasterMapsTable = function () {
-  GetMasterMaps().then((masterMaps) => {
-    masterMapsTableBody.innerHTML = '';
-    masterMapSelect.innerHTML = '<option disabled>Select Database...</option>';
-    if (masterMaps == null) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-      td.colSpan = 5;
-      td.style.textAlign = 'center';
-      td.style.color = '#94a3b8';
-      td.textContent = 'No master maps available.';
-      tr.appendChild(td);
-      masterMapsTableBody.appendChild(tr);
-      log.innerHTML += "\nThere is no master maps yet";
-      return;
-    }
-    masterMaps.forEach((map, i) => {
-      // select option in georeferensi menu
-      const option = document.createElement('option');
-      option.value = map.name;
-      option.textContent = map.name;
-      masterMapSelect.appendChild(option);
+  GetMasterMaps()
+    .then((masterMaps) => {
+      masterMapsTableBody.innerHTML = "";
+      masterMapSelect.innerHTML =
+        "<option disabled>Select Database...</option>";
+      if (masterMaps == null) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.style.textAlign = "center";
+        td.style.color = "#94a3b8";
+        td.textContent = "No master maps available.";
+        tr.appendChild(td);
+        masterMapsTableBody.appendChild(tr);
+        log.innerHTML += "\nThere is no master maps yet";
+        return;
+      }
+      masterMaps.forEach((map, i) => {
+        // select option in georeferensi menu
+        const option = document.createElement("option");
+        option.value = map.name;
+        option.textContent = map.name;
+        masterMapSelect.appendChild(option);
 
-      // table content
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
+        // table content
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
             <td>${map.name}</td>
             <td>${map.dimension}</td>
             <td>${map.srid}</td>
             <td>${map.type}</td>
             <td><button class="delete-btn btn" aria-label="Delete ${map.name}" data-name="${map.name}">Delete</button></td>
           `;
-      masterMapsTableBody.appendChild(tr);
-    });
-    masterMapsTableBody.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const name = e.currentTarget.getAttribute('data-name');
-        if (confirm(`Are you sure you want to delete "${name}"?`)) {
-          deleteMasterMap(name)
-        }
+        masterMapsTableBody.appendChild(tr);
       });
-    });
-  }).catch((err) => {
-    log.innerHTML += "\nFailed to load master maps:" + err;
-    masterMapSelect.innerHTML = '<option disabled>Error loading maps</option>';
-  });
-}
-window.uploadMasterMap = function () {
-  SelectGeojsonFile().then((filePath) => {
-    CreateMasterMaps(filePath).then((result) => {
-      refreshMasterMapsTable();
-      log.innerHTML += "\ngeojson file uploaded succesfully ";
-    }).catch((err) => {
-      log.innerHTML += "\nError upload geojson file : " + err;
+      masterMapsTableBody.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const name = e.currentTarget.getAttribute("data-name");
+          if (confirm(`Are you sure you want to delete "${name}"?`)) {
+            deleteMasterMap(name);
+          }
+        });
+      });
     })
-  }).catch((err) => {
-    log.innerHTML += "\nError select geojson file : " + err;
-  })
-}
+    .catch((err) => {
+      log.innerHTML += "\nFailed to load master maps:" + err;
+      masterMapSelect.innerHTML =
+        "<option disabled>Error loading maps</option>";
+    });
+};
+window.uploadMasterMap = function () {
+  SelectGeojsonFile()
+    .then((filePath) => {
+      CreateMasterMaps(filePath)
+        .then((result) => {
+          refreshMasterMapsTable();
+          log.innerHTML += "\ngeojson file uploaded succesfully ";
+        })
+        .catch((err) => {
+          log.innerHTML += "\nError upload geojson file : " + err;
+        });
+    })
+    .catch((err) => {
+      log.innerHTML += "\nError select geojson file : " + err;
+    });
+};
 window.deleteMasterMap = function (name) {
-  DeleteMasterMap(name).then((result) => {
-    refreshMasterMapsTable();
-    log.innerHTML += "\nMastermap " + name + "deleted succesfully ";
-  }).catch((err) => {
-    log.innerHTML += "\nError deleteting master map : " + name + err;
-  })
-}
-function addGeojsonFile(gFile){
-  geojsonFile.innerHTML = ""
+  DeleteMasterMap(name)
+    .then((result) => {
+      refreshMasterMapsTable();
+      log.innerHTML += "\nMastermap " + name + "deleted succesfully ";
+    })
+    .catch((err) => {
+      log.innerHTML += "\nError deleteting master map : " + name + err;
+    });
+};
+function addGeojsonFile(gFile) {
+  geojsonFile.innerHTML = "";
   selectedGeojsonFile = gFile;
-  const listItem = document.createElement('div');
-  listItem.setAttribute('title', gFile);
-  var filename = gFile.replace(/^.*[\\/]/, '');
-  listItem.innerHTML = '<span>' + filename + '</span>' + '<button class="x"data-path=\"' + gFile + '\"onclick="removeGeojsonFile()">x</button>';
+  const listItem = document.createElement("div");
+  listItem.setAttribute("title", gFile);
+  var filename = gFile.replace(/^.*[\\/]/, "");
+  listItem.innerHTML =
+    "<span>" +
+    filename +
+    "</span>" +
+    '<button class="x"data-path=\"' +
+    gFile +
+    '\"onclick="removeGeojsonFile()">x</button>';
   geojsonFile.appendChild(listItem);
   geojsonFile.style.display = "block";
 }
@@ -382,43 +420,53 @@ window.removeGeojsonFile = function () {
   selectedGeojsonFile = "";
   geojsonFile.innerHTML = "";
   geojsonFile.style.display = "none";
-}
+};
 
 window.selectGeojson = function () {
-  const masterMapType = document.querySelector('input[name="masterMapType"]:checked').value;
+  const masterMapType = document.querySelector(
+    'input[name="masterMapType"]:checked',
+  ).value;
   SelectGeojsonFileForGeoreference(masterMapType)
     .then((result) => {
-      addGeojsonFile(result)
+      addGeojsonFile(result);
     })
     .catch((err) => {
       log.innerHTML += "Error select file :" + err;
     });
 };
 
-function addRasterFiles(rasters){
+function addRasterFiles(rasters) {
   if (selectedRasterFiles.length == 0) {
-        rasterFiles.innerHTML = ""
-      }
-      rasters.forEach(function (item, index) {
-        var index = selectedRasterFiles.indexOf(item);
-        if (index > -1) { // only when item is found
-          return;
-        }
-        selectedRasterFiles.push(item);
-        const listItem = document.createElement('div');
-        listItem.setAttribute('title', item);
-        var filename = item.replace(/^.*[\\/]/, '');
-        listItem.innerHTML = '<span>' + filename + '</span>' + '<button class="x"data-path=\"' + item + '\"onclick="removeRasterFiles(this)">x</button>';
-        rasterFiles.appendChild(listItem);
-        rasterFiles.style.display = "grid";
-      });
+    rasterFiles.innerHTML = "";
+  }
+  rasters.forEach(function (item, index) {
+    var index = selectedRasterFiles.indexOf(item);
+    if (index > -1) {
+      // only when item is found
+      return;
+    }
+    selectedRasterFiles.push(item);
+    const listItem = document.createElement("div");
+    listItem.setAttribute("title", item);
+    var filename = item.replace(/^.*[\\/]/, "");
+    listItem.innerHTML =
+      "<span>" +
+      filename +
+      "</span>" +
+      '<button class="x"data-path=\"' +
+      item +
+      '\"onclick="removeRasterFiles(this)">x</button>';
+    rasterFiles.appendChild(listItem);
+    rasterFiles.style.display = "grid";
+  });
 }
 
 window.removeRasterFiles = function (e) {
   var fpath = e.getAttribute("data-path");
   e.parentNode.parentNode.removeChild(e.parentNode);
   var index = selectedRasterFiles.indexOf(fpath);
-  if (index > -1) { // only splice array when item is found
+  if (index > -1) {
+    // only splice array when item is found
     selectedRasterFiles.splice(index, 1); // 2nd parameter means remove one item only
   }
   if (selectedRasterFiles.length == 0) {
@@ -430,7 +478,7 @@ window.removeRasterFiles = function (e) {
 window.selectRasterFiles = function () {
   SelectRasterFiles()
     .then((result) => {
-      addRasterFiles(result)
+      addRasterFiles(result);
     })
     .catch((err) => {
       log.innerHTML += "Error select file :" + err;
@@ -439,35 +487,63 @@ window.selectRasterFiles = function () {
 
 window.processGeoreference = function () {
   var selectedMap = "";
-  const masterMapType = document.querySelector('input[name="masterMapType"]:checked').value;
-  const masterMapSource = document.querySelector('input[name="masterMapSource"]:checked').value;
+  const masterMapType = document.querySelector(
+    'input[name="masterMapType"]:checked',
+  ).value;
+  const masterMapSource = document.querySelector(
+    'input[name="masterMapSource"]:checked',
+  ).value;
+
+  // const attrKey = document.querySelector('input[name="attributeKey"]').value;
+  // const rasterKeyType = document.querySelector(
+  //   'input[name="rasterKeyType"]',
+  // ).value;
+  // const numChar = document.querySelector('input[name="numChar"]').value;
+  const margin = document.querySelector('input[name="margin"]').value;
 
   if (masterMapSource == "database") {
-    selectedMap = document.getElementById('masterMapSelect').value;
+    selectedMap = document.getElementById("masterMapSelect").value;
   } else if (masterMapSource == "file") {
     selectedMap = selectedGeojsonFile;
   }
 
   if (selectedMap == "" || selectedMap == null) {
-    log.innerHTML = "no master map selected"
+    log.innerHTML = "no master map selected";
     return;
   }
 
   if (selectedRasterFiles.length === 0) {
-    log.innerHTML = "no raster file selected"
+    log.innerHTML = "no raster file selected";
     return;
   }
+
+  var georeferenceSetting = {
+    master_map_source: masterMapSource,
+    master_map: selectedMap,
+    //attr_key: attrKey,
+    raster_rotation: 0,
+    // raster_key_settings: {
+    //   type: rasterKeyType,
+    //   num_char: parseInt(numChar, 10),
+    // },
+    raster_feature_settings: {
+      x_position: "none",
+      y_position: "none",
+      margin: parseFloat(margin),
+    },
+  };
+  const gSetting = JSON.stringify(georeferenceSetting);
   // Call App.Select(name)
   try {
     log.innerHTML = "<span class='spinner'></span>georeference loading...";
-    ProcessGeoreference(selectedRasterFiles, selectedMap, masterMapType, masterMapSource)
+    ProcessGeoreference(selectedRasterFiles, masterMapType, gSetting)
       .then((result) => {
         resetRasterFiles();
         log.innerHTML = "";
         result.forEach(function (item, index) {
-          const listItem = document.createElement('p');
-          if (item.indexOf('success :') != 0) {
-            listItem.setAttribute('class', 'red');
+          const listItem = document.createElement("p");
+          if (item.indexOf("success :") != 0) {
+            listItem.setAttribute("class", "red");
           }
           listItem.textContent = item;
           log.appendChild(listItem);
@@ -475,14 +551,15 @@ window.processGeoreference = function () {
       })
       .catch((err) => {
         console.error(err);
+        log.innerHTML = "Error: " + err;
       });
   } catch (err) {
     console.error(err);
-    alert(error);
+    log.innerHTML = "Error: " + err;
   }
 };
 
-function resetRasterFiles(){
+function resetRasterFiles() {
   selectedRasterFiles.length = 0;
   rasterFiles.style.display = "none";
   rasterFiles.innerHTML = "";
@@ -494,34 +571,34 @@ function resetForm() {
 }
 
 function disableTabListeners(tabs) {
-  tabs.forEach(tab => {
+  tabs.forEach((tab) => {
     const handlers = tabHandlers.get(tab);
     if (handlers) {
-      tab.removeEventListener('click', handlers.clickHandler);
-      tab.removeEventListener('keydown', handlers.keyHandler);
+      tab.removeEventListener("click", handlers.clickHandler);
+      tab.removeEventListener("keydown", handlers.keyHandler);
       tabHandlers.delete(tab);
     }
-    tab.setAttribute('aria-disabled', 'true');
-    tab.classList.add('disabled');
+    tab.setAttribute("aria-disabled", "true");
+    tab.classList.add("disabled");
   });
 }
 enableTabListeners(tabsPublic);
 function enableTabListeners(tabs) {
-  tabs.forEach(tab => {
+  tabs.forEach((tab) => {
     const clickHandler = () => {
-      const target = tab.getAttribute('data-tab');
+      const target = tab.getAttribute("data-tab");
       switchTab(target, tab);
     };
 
     const keyHandler = (e) => {
       let index = Array.from(tabs).indexOf(e.target);
-      if (e.key === 'ArrowRight') {
+      if (e.key === "ArrowRight") {
         e.preventDefault();
         let nextIndex = (index + 1) % tabs.length;
         tabs[nextIndex].focus();
         tabs[nextIndex].click();
       }
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
         let prevIndex = (index - 1 + tabs.length) % tabs.length;
         tabs[prevIndex].focus();
@@ -529,70 +606,67 @@ function enableTabListeners(tabs) {
       }
     };
 
-    tab.addEventListener('click', clickHandler);
-    tab.addEventListener('keydown', keyHandler);
+    tab.addEventListener("click", clickHandler);
+    tab.addEventListener("keydown", keyHandler);
 
     tabHandlers.set(tab, { clickHandler, keyHandler });
     // Re-enable visually
-    tab.removeAttribute('aria-disabled');
-    tab.classList.remove('disabled');
+    tab.removeAttribute("aria-disabled");
+    tab.classList.remove("disabled");
   });
 }
 
 function switchTab(tabName, tabElement) {
-  tabs.forEach(t => {
-    t.classList.remove('active');
-    t.setAttribute('aria-selected', 'false');
-    t.setAttribute('tabindex', '-1');
+  tabs.forEach((t) => {
+    t.classList.remove("active");
+    t.setAttribute("aria-selected", "false");
+    t.setAttribute("tabindex", "-1");
   });
-  panels.forEach(panel => {
-    panel.classList.remove('active');
-    panel.setAttribute('hidden', '');
+  panels.forEach((panel) => {
+    panel.classList.remove("active");
+    panel.setAttribute("hidden", "");
   });
 
-  tabElement.classList.add('active');
-  tabElement.setAttribute('aria-selected', 'true');
-  tabElement.setAttribute('tabindex', '0');
+  tabElement.classList.add("active");
+  tabElement.setAttribute("aria-selected", "true");
+  tabElement.setAttribute("tabindex", "0");
 
   const panel = document.getElementById(tabName);
-  panel.classList.add('active');
-  panel.removeAttribute('hidden');
+  panel.classList.add("active");
+  panel.removeAttribute("hidden");
   panel.focus({ preventScroll: true });
 }
 
-const databaseSource = document.getElementById('database-source');
-const fileSource = document.getElementById('file-source');
-const fileSourceInput = document.querySelector('.file-source-input');
-const databaseSourceInput = document.querySelector('.database-source-input');
+const databaseSource = document.getElementById("database-source");
+const fileSource = document.getElementById("file-source");
+const fileSourceInput = document.querySelector(".file-source-input");
+const databaseSourceInput = document.querySelector(".database-source-input");
 
 // Event listener for radio buttons
-databaseSource.addEventListener('change', function () {
+databaseSource.addEventListener("change", function () {
   if (this.checked) {
-    fileSourceInput.style.display = 'none';
-    databaseSourceInput.style.display = 'block';
+    fileSourceInput.style.display = "none";
+    databaseSourceInput.style.display = "block";
     removeGeojsonFile();
-    masterMapSelect.innerHTML = '<option disabled>Select Database...</option>';
+    masterMapSelect.innerHTML = "<option disabled>Select Database...</option>";
   }
 });
 
-fileSource.addEventListener('change', function () {
+fileSource.addEventListener("change", function () {
   if (this.checked) {
-    databaseSourceInput.style.display = 'none';
-    fileSourceInput.style.display = 'block';
+    databaseSourceInput.style.display = "none";
+    fileSourceInput.style.display = "block";
     removeGeojsonFile();
-    masterMapSelect.innerHTML = '<option disabled>Select Database...</option>';
+    masterMapSelect.innerHTML = "<option disabled>Select Database...</option>";
   }
 });
 
-databaseSourceInput.style.display = 'none';
-fileSourceInput.style.display = 'block';
+databaseSourceInput.style.display = "none";
+fileSourceInput.style.display = "block";
 
 document.querySelectorAll('input[name="masterMapType"]').forEach(function (el) {
-  el.addEventListener('change', function (event) {
+  el.addEventListener("change", function (event) {
     removeGeojsonFile();
-    masterMapSelect.innerHTML = '<option disabled>Select Database...</option>';
+    masterMapSelect.innerHTML = "<option disabled>Select Database...</option>";
   });
 });
-
-
-
