@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -241,16 +240,15 @@ func GetRasterFeaturePoints(filePath string, orientation float64) ([]types.Coord
 	safePath := strings.ReplaceAll(filePath, `\`, `/`) // Replace all backslashes with forward slashes
 	pythonCode := fmt.Sprintf(`import pypy; print(pypy.rasterFeaturePoints('%s', False,%v))`, safePath, orientation)
 
-	exePath, err := os.Executable()
+	pythonPath, err := pythonExecutable()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve application path. error : %s.", err.Error())
+		return nil, fmt.Errorf("Failed to resolve python interpreter. error : %s.", err.Error())
 	}
-	appDir := filepath.Dir(exePath)
-	//pythonPath := filepath.Join(appDir, "python-embed", "python.exe")
-	pythonPath := filepath.Join("python.exe")
 
 	cmd := exec.Command(pythonPath, "-c", pythonCode)
-	cmd.Dir = appDir // so `import pypy` finds pypy.py next to the executable, regardless of the process's cwd
+	if dir, err := pythonWorkDir(); err == nil && dir != "" {
+		cmd.Dir = dir // so `import pypy` finds pypy.py, regardless of the process's cwd
+	}
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
 	}

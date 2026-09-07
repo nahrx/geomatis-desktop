@@ -18,7 +18,7 @@ document.querySelector("#app").innerHTML = `
 <main class="container" role="main">
   <img id="logo" class="logo">
   <h1>Geomatis</h1>
-  <p class="text-center" style="margin-bottom:20px">Automatically georeference WS maps from BPS survey/census activities.</p>
+  <p class="text-center" style="margin-bottom:20px">Automatically georeference WSS/WS/WB maps from BPS survey/census activities.</p>
   <nav class="tabs" role="tablist" aria-label="Main Sections">
     <div class="tab public active" role="tab" tabindex="-1" aria-selected="false" aria-controls="georeferensi" id="tab-georeferensi" data-tab="georeferensi">Georeference</div>
     <div class="tab public" role="tab" tabindex="0" aria-selected="true" aria-controls="database" id="tab-database" data-tab="database">DB Connection</div>
@@ -139,20 +139,27 @@ document.querySelector("#app").innerHTML = `
   </section>
   <!-- About Tab -->
   <section class="input-box" role="tabpanel" aria-labelledby="tab-about" id="about" tabindex="0" hidden>
-    <h3>Geomatis-Desktop Version 1.2</h3>
+    <h3>Geomatis-Desktop Version 2</h3>
     <h4>About</h4>
-    <p>Geomatis is used for automatic georeferencing of WS maps resulting from BPS-Statistics Indonesia's survey activities. This app will create world files (.jwg for .jpg image / .pgw for .png image) to store georeferencing information for raster images.</p>
+    <p>Geomatis is used for automatic georeferencing of WSS/WS/WB maps resulting from BPS-Statistics Indonesia's survey activities. This app will create world files (.jgw for .jpg image / .pgw for .png image) to store georeferencing information for raster images.</p>
     <h4>Requirements</h4>
     <ul>
-      <li> The scanned map file name must begin with <strong>IDSLS</strong>, for example: <code>64710500010001.jpg</code>, <code>64710500010001_WS.jpg</code>. The program will take the first 14 digits of the file name to match it with the IDSLS in the digital SLS master. </li>
-      <li> The WS map scan result must be of good quality, with no folded paper, especially in the map container area, as this is the part read by the computer vision program. </li>
-      <li> The WS map scan must not be upside down. </li>
+      <li> The scanned map file name must begin with the map's key ID, matching the selected map type:
+        <ul>
+          <li><strong>WSS map</strong> &mdash; begins with <strong>IDSUBSLS</strong> (16 digits), for example: <code>6403110001000100.jpg</code>. </li>
+          <li><strong>WS map</strong> &mdash; begins with <strong>IDSLS</strong> (14 digits), for example: <code>64710500010001.jpg</code>, <code>64710500010001_WS.jpg</code>. </li>
+          <li><strong>WB map</strong> &mdash; begins with <strong>IDBS</strong> (14 digits), for example: <code>64710500010001.jpg</code>, <code>64710500010001_WB.jpg</code>. </li>
+        </ul>
+        The program will take the first digits of the file name (as many as the key's digit count above) to match it with the master map. </li>
+      <li> The map scan result must be of good quality, with no folded paper, especially in the map container area, as this is the part read by the computer vision program. </li>
+      <li> The map scan must not be upside down. </li>
+      <li> <strong>Margin</strong> is the blank space between the map container's corner markers and the actual map content, as a percentage of the container size (default: <code>0.05</code>, i.e. 5%). Adjust this if the detected georeferencing result looks slightly off-scale. </li>
     </ul>
     <h4>Quick Guide</h4>
     <h5>From file</h5>
     <ol>
       <li>Go to the <strong>Georeference</strong> tab. </li>
-      <li>Select map type <strong>(WS/WB map)</strong>
+      <li>Select map type <strong>(WSS/WS/WB map)</strong> &mdash; defaults to <strong>WSS</strong>
       </li>
       <li>Click <strong>From File</strong> button </li>
       <li>Upload the master map geojson file from computer</li>
@@ -162,9 +169,9 @@ document.querySelector("#app").innerHTML = `
     <h5>From database</h5>
     <ol>
       <li>Connect to the PostgreSQL database that has been previously created ( <a href="https://www.w3schools.com/postgresql/postgresql_install.php" target="_blank">tutorial guide</a>) </li>
-      <li>Add and manage SLS master data in the <strong>Master Maps</strong> tab </li>
+      <li>Add and manage SLS/SubSLS master data in the <strong>Master Maps</strong> tab </li>
       <li>Go to the <strong>Georeference</strong> tab </li>
-      <li>Select map type <strong>(WS/WB map)</strong>
+      <li>Select map type <strong>(WSS/WS/WB map)</strong> &mdash; defaults to <strong>WSS</strong>
       </li>
       <li>Click <strong>From Database</strong> button </li>
       <li>Upload the master map available in the database</li>
