@@ -203,7 +203,13 @@ func (a *App) SelectGeojsonFileForGeoreference(mapType string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if mapType == "ws" {
+	if mapType == "wss" {
+		e, err := bpsmap.ParseExtents(file, bpsmap.WssMap{})
+		if err != nil {
+			return "", err
+		}
+		a.extent = e
+	} else if mapType == "ws" {
 		e, err := bpsmap.ParseExtents(file, bpsmap.WsMap{})
 		if err != nil {
 			return "", err
